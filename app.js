@@ -58,7 +58,7 @@ function h(tag, attrs = {}, ...children) {
 
 const money = (n) => `$${Number(n).toFixed(2)}`;
 const per = (period) => E.periodKey(period); // 'mo' | 'yr' | 'wk'
-const SOURCE_LABELS = { demo: 'Demo', gmail: 'Gmail', google: 'Gmail', outlook: 'Outlook', microsoft: 'Outlook', calendar: 'Calendar', gcal: 'Calendar', 'google-calendar': 'Calendar', ics: 'Calendar', todoist: 'Todoist', manual: 'You', setup: 'You' };
+const SOURCE_LABELS = { demo: 'Demo', gmail: 'Gmail', google: 'Gmail', outlook: 'Outlook', microsoft: 'Outlook', calendar: 'Calendar', gcal: 'Calendar', 'google-calendar': 'Calendar', ics: 'Calendar', todoist: 'Todoist', gtasks: 'Google Tasks', mstodo: 'To Do', manual: 'You', setup: 'You' };
 function sourceLabel(src) {
   const key = String(src || '').toLowerCase();
   if (SOURCE_LABELS[key]) return SOURCE_LABELS[key];
@@ -607,7 +607,11 @@ async function hostLoad(ws, { merge = false } = {}) {
   save();
   render();
   const n = (ws?.emails?.length || 0) + (ws?.tasks?.length || 0);
-  showToast(`Loaded ${n} item${n === 1 ? '' : 's'} from ${sourceLabel(ws?.source)}`, () => (state = before));
+  const ev = ws?.events?.length || 0;
+  const parts = [];
+  if (n || !ev) parts.push(`${n} item${n === 1 ? '' : 's'}`);
+  if (ev) parts.push(`${ev} event${ev === 1 ? '' : 's'}`);
+  showToast(`Loaded ${parts.join(' and ')} from ${sourceLabel(ws?.source)}`, () => (state = before));
   const rescored = await rescore({ auto: true });
   return { items: state.items.length, events: state.events.length, rescored };
 }
