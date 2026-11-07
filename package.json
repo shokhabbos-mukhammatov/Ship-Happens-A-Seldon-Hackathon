@@ -1,0 +1,15 @@
+{
+  "name": "bouncer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bouncer: your goals decide what gets in. A goal-first replacement for Meta Muse.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "smoke": "node tests/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

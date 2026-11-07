@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bouncer</title>
+  <meta name="description" content="Bouncer: your goals decide what gets in. The AI scores, the code decides.">
+  <meta name="theme-color" content="#0b1511">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="masthead">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="7" cy="9" r="3"/><circle cx="25" cy="9" r="3"/>
+          <rect x="6" y="11" width="2" height="16" rx="1"/><rect x="24" y="11" width="2" height="16" rx="1"/>
+          <path d="M8 13 C 13 21, 19 21, 24 13" fill="none" stroke-width="2.2"/>
+        </svg>
+        <div>
+          <h1>Bouncer</h1>
+          <p class="tagline">Your goals decide what gets in.</p>
+        </div>
+      </div>
+      <span class="ai-pill" id="ai-pill" title="AI status">checking AI...</span>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-now" data-tab="now" data-testid="tab-now" aria-selected="true" aria-controls="view-now">Now</button>
+      <button role="tab" id="tab-inbox" data-tab="inbox" data-testid="tab-inbox" aria-selected="false" aria-controls="view-inbox">The Door</button>
+      <button role="tab" id="tab-lastcall" data-tab="lastcall" data-testid="tab-lastcall" aria-selected="false" aria-controls="view-lastcall">Last Call</button>
+      <button role="tab" id="tab-setup" data-tab="setup" data-testid="tab-setup" aria-selected="false" aria-controls="view-setup">Setup</button>
+    </nav>
+
+    <main>
+      <!-- NOW -->
+      <section id="view-now" class="view" role="tabpanel" aria-labelledby="tab-now">
+        <div class="panel guest-list">
+          <h2 class="eyebrow">Tonight's guest list</h2>
+          <ol class="goals" data-testid="goals-list" id="goals-list"></ol>
+        </div>
+
+        <div id="lastcall-banner" class="banner" data-testid="lastcall-banner" hidden>
+          <strong>Last call: you're done for today. Tomorrow's top 3 are saved.</strong>
+          <ol id="tomorrow-list" class="tomorrow"></ol>
+        </div>
+
+        <div id="now-controls" class="now-controls">
+          <div class="free-line" id="free-line"></div>
+          <div class="energy" role="group" aria-label="Energy">
+            <span class="energy-label">Energy</span>
+            <button type="button" class="chip" data-energy="high" data-testid="energy-high" aria-pressed="true">High</button>
+            <button type="button" class="chip" data-energy="low" data-testid="energy-low" aria-pressed="false">Low</button>
+          </div>
+          <button type="button" class="btn-primary" id="btn-what-now" data-testid="btn-what-now">What should I do right now?</button>
+          <p class="pace" id="pace-status" data-testid="pace-status" hidden></p>
+          <div class="picks" id="picks" aria-live="polite"></div>
+          <p class="empty" id="picks-empty">Press the button. Bouncer checks every task and email against the guest list, then packs what fits before your next commitment.</p>
+        </div>
+      </section>
+
+      <!-- INBOX / THE DOOR -->
+      <section id="view-inbox" class="view" role="tabpanel" aria-labelledby="tab-inbox" hidden>
+        <div class="door-head">
+          <h2>The Door</h2>
+          <span class="door-badge" data-testid="door-badge" id="door-badge">0 bounced at the door</span>
+        </div>
+        <p class="sub">Sorted by how much each email moves your goals. Bouncer reads; it never replies, forwards or deletes.</p>
+        <div class="quarantine" id="quarantine-wrap">
+          <h3 class="quarantine-title">Bounced: not on the list</h3>
+          <ul class="quarantine-list" data-testid="quarantine-list" id="quarantine-list"></ul>
+        </div>
+        <ul class="inbox-list" data-testid="inbox-list" id="inbox-list"></ul>
+      </section>
+
+      <!-- LAST CALL -->
+      <section id="view-lastcall" class="view" role="tabpanel" aria-labelledby="tab-lastcall" hidden>
+        <div class="savings panel">
+          <span class="eyebrow">If you cut what's below</span>
+          <div class="subs-total" data-testid="subs-total" id="subs-total">You'd save $0.00/month</div>
+        </div>
+        <h2>Stop paying</h2>
+        <p class="sub">Subscriptions with goal fit under 30, or unused for 30+ days.</p>
+        <ul class="subs-list" data-testid="subs-list" id="subs-list"></ul>
+        <details class="keep" id="keep-wrap">
+          <summary>Staying on the list</summary>
+          <ul class="keep-list" id="keep-list"></ul>
+        </details>
+        <h2>Stop doing</h2>
+        <p class="sub">Tasks scoring under 20 that have sat for more than two weeks.</p>
+        <ul class="drop-list" data-testid="drop-list" id="drop-list"></ul>
+      </section>
+
+      <!-- SETUP -->
+      <section id="view-setup" class="view" role="tabpanel" aria-labelledby="tab-setup" hidden>
+        <h2>Setup</h2>
+        <p class="ai-status" data-testid="ai-status" id="ai-status">Checking AI status...</p>
+        <label class="field">
+          <span>Goals (one per line)</span>
+          <textarea id="goals-input" data-testid="goals-input" rows="5" spellcheck="false"></textarea>
+        </label>
+        <label class="field">
+          <span>Add tasks (one per line, optional <code>Title | 30m | due:+2</code>)</span>
+          <textarea id="tasks-input" data-testid="tasks-input" rows="5" spellcheck="false" placeholder="Email Ada Ventures the deck | 15m | due:+1&#10;Buy race gels | 10m | due:+5"></textarea>
+        </label>
+        <label class="field field-inline">
+          <span>Stop work at</span>
+          <input type="time" id="stop-time-input" data-testid="stop-time-input" value="18:00">
+        </label>
+        <div class="setup-actions">
+          <button type="button" class="btn-secondary" id="btn-save-setup" data-testid="btn-save-setup">Save</button>
+          <button type="button" class="btn-primary" id="btn-rescore" data-testid="btn-rescore">Rescore with Claude</button>
+          <button type="button" class="btn-ghost" id="btn-reset-demo" data-testid="btn-reset-demo">Reset demo</button>
+        </div>
+        <p class="setup-msg" id="setup-msg" role="status"></p>
+        <section id="connections" data-testid="connections" class="connections panel">
+          <h3>Connections</h3>
+          <div id="connector-buttons"></div>
+        </section>
+        <div class="principles panel">
+          <h3 class="eyebrow">House rules</h3>
+          <ul>
+            <li><strong>The AI scores, the code decides.</strong> Claude only scores items and flags risks. Ranking, time-packing and Last Call are plain deterministic code.</li>
+            <li><strong>Two locks.</strong> An email is bounced if Claude flags it <em>or</em> the pattern check does.</li>
+            <li><strong>Nothing happens without your click.</strong> Bouncer never sends, completes or deletes on its own, and every action has Undo.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" data-testid="toast" role="status" hidden>
+    <span id="toast-msg"></span>
+    <button type="button" id="toast-undo" data-testid="toast-undo">Undo</button>
+  </div>
+
+  <div class="modal-backdrop" id="draft-modal" data-testid="draft-modal" role="dialog" aria-modal="true" aria-labelledby="draft-title" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="draft-title">Cancellation draft</h3>
+        <button type="button" class="btn-ghost" id="btn-close-draft" data-testid="btn-close-draft" aria-label="Close">Close</button>
+      </div>
+      <p class="draft-label">Draft only. Bouncer never sends.</p>
+      <textarea id="draft-text" data-testid="draft-text" rows="12" readonly></textarea>
+      <div class="modal-actions">
+        <span class="copy-msg" id="copy-msg" role="status"></span>
+        <button type="button" class="btn-primary" id="btn-copy-draft" data-testid="btn-copy-draft">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module">
+    // Optional connectors: src/connectors/index.js. A missing or broken file must not break the app.
+    try {
+      await import('./src/connectors/index.js');
+    } catch (err) {
+      console.info('Bouncer: connectors not loaded:', err && err.message);
+    }
+  </script>
+</body>
+</html>
