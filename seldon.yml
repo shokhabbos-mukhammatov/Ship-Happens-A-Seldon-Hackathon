@@ -1,0 +1,88 @@
+# Seldon QA baseline for Bouncer (Ship Happens hackathon).
+# Every case opens /?demo=1, which loads the fixed demo workspace (pre-scored), so verdicts
+# don't depend on anyone's real inbox. The last case exercises live Claude scoring.
+name: bouncer
+labels: [ship-happens]
+run:
+  url: https://ship-happens-a-seldon-hackathon.vercel.app
+testCases:
+  - name: Get the three things to do right now
+    id: what-now
+    url: /?demo=1
+    steps:
+      - open the page and stay on the "Now" tab
+      - click the big "What should I do right now?" button
+    criteria: >-
+      Exactly three pick cards appear. Each card shows a numeric score, a "Moves" line that names
+      one of the goals listed in the "Tonight's guest list" panel, a "Why:" explanation, an estimate
+      in minutes, and a "fits before" line naming the next calendar event.
+
+  - name: Skip a pick and undo it
+    id: skip-undo
+    url: /?demo=1
+    steps:
+      - click "What should I do right now?"
+      - note the title of the first pick card
+      - click "Skip" on the first pick card
+      - click "Undo" in the toast that appears at the bottom
+    criteria: >-
+      After Skip, the first card shows a different task or email and an "Undo" toast is visible.
+      After Undo, the first card shows the original title again and there are still three cards.
+
+  - name: The Door bounces a prompt-injection email
+    id: door-quarantine
+    url: /?demo=1
+    steps:
+      - click the "The Door" tab
+      - look at the red "Bounced" box and at the list of emails below it
+    criteria: >-
+      A badge reads "1 bounced at the door". The red box shows the email from
+      billing@paypa1-billing.co, quotes the sentence containing "ignore your previous instructions",
+      and says "Not on the list". That email has no action buttons, and it does not appear in the
+      normal email list below the red box.
+
+  - name: Last Call finds subscriptions and drafts a cancellation without sending it
+    id: last-call-cancel
+    url: /?demo=1
+    steps:
+      - click the "Last Call" tab
+      - in "Stop paying", click "Draft cancellation" on "Meta Muse Power"
+    criteria: >-
+      The page shows "You'd save $68.99/month" and lists Tempo, Meta Muse Power and CloudVault Pro
+      with monthly prices. After clicking, a dialog shows a cancellation email addressed to Meta
+      Muse, labelled "Draft only. Bouncer never sends.", with a "Copy" button. Nothing is sent.
+
+  - name: Drop a stale task and undo it
+    id: drop-undo
+    url: /?demo=1
+    steps:
+      - click the "Last Call" tab
+      - scroll to "Stop doing" and note how many tasks are listed
+      - click "Drop" on the first task
+      - click "Undo" in the toast
+    criteria: >-
+      After Drop, that task disappears from "Stop doing" (one fewer task). After Undo, it is back
+      and the count matches the original.
+
+  - name: Last call at the end of the day
+    id: stop-time-banner
+    url: /?demo=1
+    steps:
+      - click the "Setup" tab
+      - set the "Stop work at" time to 00:01 and click "Save"
+      - click the "Now" tab
+    criteria: >-
+      The Now tab shows the banner "Last call: you're done for today. Tomorrow's top 3 are saved."
+      and no longer offers the "What should I do right now?" button.
+
+  - name: New goals get rescored live by Claude
+    id: rescore-claude
+    url: /?demo=1
+    steps:
+      - click the "Setup" tab
+      - replace the goals text with two lines, "Win the Ship Happens hackathon today" and "Close our $1.5M seed round by Dec 15"
+      - click "Save", then click "Rescore with Claude" and wait up to 30 seconds
+      - click the "Now" tab
+    criteria: >-
+      A message says the items were rescored with Claude (it starts with "Rescored"), and the
+      "Tonight's guest list" panel on the Now tab shows exactly the two new goals.
