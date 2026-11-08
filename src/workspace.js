@@ -237,7 +237,7 @@ export function applyScores(items, scores) {
 let resolveHost;
 const hostReady = new Promise((r) => (resolveHost = r));
 
-/** Called once by app.js with {load(ws, opts)}. */
+/** Called once by main.js with {load(ws, opts)}. */
 export function setWorkspaceHost(host) {
   resolveHost(host);
 }

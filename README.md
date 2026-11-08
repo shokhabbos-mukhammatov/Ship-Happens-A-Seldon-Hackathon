@@ -14,7 +14,7 @@ npm test                  # unit tests for the ranking engine (node --test)
 npm run smoke             # headless Chromium smoke test of the Wren journeys + screenshots
 ```
 
-There are no dependencies and no build step. Node 18+ is enough. The app works fully offline on cached demo scores. To turn on live scoring, create a `.env` file containing `ANTHROPIC_API_KEY=sk-ant-...` (it is gitignored), or export the variable, then restart. `server.mjs` serves the static files and mounts the same `api/*.js` handlers that Vercel runs.
+There are no dependencies and no build step. Node 18+ is enough. The app works fully offline on cached demo scores. To turn on live scoring, create a `.env` file containing `ANTHROPIC_API_KEY=sk-ant-...` (it is gitignored), or export the variable, then restart. `dev/server.mjs` serves the static files and mounts the same `api/*.js` handlers that Vercel runs.
 
 ## Deploy to Vercel
 
@@ -77,12 +77,12 @@ Items arrive unscored. They get an offline keyword score straight away, then "Re
 
 | Path | What |
 | --- | --- |
-| `index.html`, `styles.css`, `app.js` | Static UI (no framework, no CDN, no external fonts) |
+| `index.html`, `styles.css`, `main.js` | Static UI (no framework, no CDN, no external fonts) |
 | `src/engine.js` | Pure ranking engine: priority, packing, Last Call, injection prefilter |
 | `src/workspace.js` | Normalization, demo conversion, ingest, `loadWorkspace` hook |
 | `api/score.js` | Vercel function: one batched Claude Haiku 5.5 call (`claude-haiku-5-5`), strict JSON schema, 8 s timeout, 503 on any failure |
 | `api/health.js` | `{ai: true/false}` depending on whether the key is set |
-| `server.mjs` | Zero-dependency local server (static files and `api/*`) |
+| `dev/server.mjs` | Zero-dependency local server (static files and `api/*`). Kept out of the root on purpose: Vercel deploys a root `server.*` as a catch-all function. |
 | `data/demo.json` | Founder persona: 4 goals, 22 tasks, 14 emails, calendar offsets |
 | `tests/engine.test.mjs`, `tests/smoke.mjs` | Unit tests and Playwright smoke test |
 | `docs/screens/` | Screenshots at 1280x800 |

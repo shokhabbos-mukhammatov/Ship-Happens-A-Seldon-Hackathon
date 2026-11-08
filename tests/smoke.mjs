@@ -1,5 +1,5 @@
 // Headless browser smoke test for the three Wren journeys.
-// Usage: npm run smoke   (starts server.mjs on a spare port)
+// Usage: npm run smoke   (starts dev/server.mjs on a spare port)
 //        BASE_URL=https://your-app.vercel.app node tests/smoke.mjs   (test a deployment)
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -35,7 +35,7 @@ async function waitForServer(url, ms = 10000) {
 
 let server = null;
 if (!process.env.BASE_URL) {
-  server = spawn(process.execPath, ['server.mjs'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'inherit'] });
+  server = spawn(process.execPath, ['dev/server.mjs'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'inherit'] });
   await waitForServer(`${BASE}/api/health`);
 }
 
