@@ -5,9 +5,9 @@
 # @seldonqa/cli-win32-x64), so Windows laptops can't run it locally.
 #
 # Needs one repository secret: SELDON_API_KEY (Settings > Secrets and variables > Actions).
-# Start it with "Run workflow" in the Actions tab, or by pushing to a seldon/** branch.
-# To re-fetch an earlier run's report without a new run, set report_id, or push a commit
-# whose message has a "Seldon-Report-Id: <run id>" line.
+# Manual only (Actions tab > Seldon QA > Run workflow), because every run spends Seldon usage.
+# Pick the branch to commit the report to; set report_id to re-fetch an earlier run's
+# report without starting a new one.
 name: Seldon QA
 
 on:
@@ -21,8 +21,6 @@ on:
         description: Re-fetch this Seldon run's report instead of starting a new run
         required: false
         default: ''
-  push:
-    branches: ['seldon/**']
 
 permissions:
   contents: write
@@ -64,19 +62,13 @@ jobs:
         env:
           TARGET_URL: ${{ inputs.url }}
           REPORT_ID: ${{ inputs.report_id }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           out=docs/seldon-report.md
           url_flag=()
           if [ -n "$TARGET_URL" ]; then url_flag=(--url "$TARGET_URL"); fi
 
           # Report-only mode: re-fetch an earlier run's report instead of starting a new run.
-          # Set the report_id input, or put a "Seldon-Report-Id: <run id>" line in the pushed commit.
-          id="$REPORT_ID"
-          if [ -z "$id" ]; then
-            id=$(printf '%s\n' "$COMMIT_MSG" | sed -n 's/^Seldon-Report-Id: *//p' | head -n1)
-          fi
-          id=$(printf '%s' "$id" | tr -cd '0-9A-Za-z_-')
+          id=$(printf '%s' "$REPORT_ID" | tr -cd '0-9A-Za-z_-')
 
           # Without a report, still commit what happened so it can be read from the branch.
           no_report() {

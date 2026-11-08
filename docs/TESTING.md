@@ -93,10 +93,14 @@ All cases run against `https://ship-happens-a-seldon-hackathon.vercel.app` and o
 
 ### Running it
 
+**From GitHub (any OS):** Actions → **Seldon QA** → *Run workflow*, and pick the branch the report should be committed to. The workflow (`.github/workflows/seldon.yml`) runs on Ubuntu: it installs the CLI, runs `validate`, `run --wait` and `report`, then commits `docs/seldon-report.md` and `docs/seldon-report.json` to that branch. It needs the `SELDON_API_KEY` repository secret. It only runs when started by hand, because every run spends Seldon usage. Set `report_id` to re-fetch an earlier run's report without starting a new one.
+
+**Locally (macOS or Linux only):** the CLI ships native binaries for macOS and Linux, and there is no Windows build (`@seldonqa/cli-win32-x64` isn't published), so on Windows use the workflow above.
+
 ```bash
 npm install -g @seldonqa/cli
 seldon login <seldon api key>
-seldon validate                 # schema + plan limits (trial plan: 20 cases per run)
+seldon validate                 # schema + plan limits
 seldon run --wait               # runs all 7 cases against run.url, waits for the report
 seldon report --md > docs/seldon-report.md
 ```
@@ -105,12 +109,29 @@ Results also appear at app.seldon.com → Experiments → Quality Assurance. Aft
 
 ### Seldon QA results
 
-> **To fill in after the run** (don't edit by hand; paste from `seldon report --md`):
->
-> - Run on final build: _commit `<hash>`, `<date/time>`_
-> - Verdicts: _`<n>/7 PASS`_
-> - Bugs Seldon found and how we fixed them: _…_
-> - Full report: [`docs/seldon-report.md`](seldon-report.md)
+**Latest run: 6/7 PASS, 0 FAIL, 1 BLOCKED.**
+
+- **Build tested:** production (`https://ship-happens-a-seldon-hackathon.vercel.app`) serving `main` at commit `3fc94b5`. We checked that the deployed `index.html`, `main.js` and `src/` files match that commit.
+- **When:** 2026-11-08, 01:27–01:57 UTC. Seldon run `8a0201c9-55a8-4d00-9f4b-03b2f29a75b7`, CLI 0.14.2, from the Seldon QA workflow.
+- **Full report:** [`docs/seldon-report.md`](seldon-report.md) (from `seldon report --md --full`), plus [`docs/seldon-report.json`](seldon-report.json).
+
+| # | Case id | Verdict | Notes |
+|---|---|---|---|
+| 1 | `what-now` | ✅ PASS | |
+| 2 | `skip-undo` | 🚫 BLOCKED | Not evaluated: see below |
+| 3 | `door-quarantine` | ✅ PASS | |
+| 4 | `last-call-cancel` | ✅ PASS | |
+| 5 | `drop-undo` | ✅ PASS | |
+| 6 | `stop-time-banner` | ✅ PASS | |
+| 7 | `rescore-claude` | ✅ PASS | Live Claude rescoring on production |
+
+**Bugs Seldon found:** none. No case failed.
+
+**Why `skip-undo` is blocked:** Seldon ran all seven cases in one agent session, which took about half an hour, and that session ran out of trace budget before it reached this case. Seldon recorded no steps or screenshots for it, so the verdict is "couldn't evaluate", not "broken". Seldon's recommendation is to re-run the case in its own session. We haven't done that yet. The same journey is covered by the browser smoke checks (Skip replaces card 1, an Undo toast appears and Undo restores it), which passed 36/36 against production. `drop-undo`, which uses the same Undo toast, passed in Seldon.
+
+**Report quirk:** the first report, fetched right after `seldon run --wait` returned, said "6/7 passed" but listed only the six passing cases. The blocked verdict showed up when we fetched the same run again a few minutes later. That's why the workflow now also commits the JSON report.
+
+**Still to do:** this run tested `3fc94b5`. UI work is still landing, so after the feature freeze, re-run the suite on the final build (Actions → Seldon QA → Run workflow) and update this section.
 
 ## 4. What is *not* covered by automated tests
 
