@@ -5,7 +5,7 @@
   "description": "Bouncer: your goals decide what gets in. A goal-first replacement for Meta Muse.",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
+    "start": "node dev/server.mjs",
     "test": "node --test",
     "smoke": "node tests/smoke.mjs"
   },

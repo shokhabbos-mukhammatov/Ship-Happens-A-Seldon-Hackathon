@@ -6,7 +6,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const ROOT = path.dirname(fileURLToPath(import.meta.url));
+// Lives in dev/ so Vercel doesn't mistake it for a server entrypoint; serves the repo root.
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT) || 3000;
 
 // Minimal .env loader (does not override real env vars).
@@ -30,7 +31,7 @@ const MIME = {
   '.md': 'text/markdown; charset=utf-8',
 };
 // Only these top-level paths are public.
-const PUBLIC = [/^\/index\.html$/, /^\/styles\.css$/, /^\/app\.js$/, /^\/src\/(?:[\w-]+\/)*[\w.-]+\.(?:js|mjs|css|json)$/, /^\/data\/[\w.-]+\.json$/, /^\/docs\/screens\/[\w.-]+\.png$/, /^\/favicon\.svg$/];
+const PUBLIC = [/^\/index\.html$/, /^\/styles\.css$/, /^\/main\.js$/, /^\/src\/(?:[\w-]+\/)*[\w.-]+\.(?:js|mjs|css|json)$/, /^\/data\/[\w.-]+\.json$/, /^\/docs\/screens\/[\w.-]+\.png$/, /^\/favicon\.svg$/];
 
 async function readBody(req) {
   const chunks = [];
