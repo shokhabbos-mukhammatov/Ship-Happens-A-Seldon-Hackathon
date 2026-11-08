@@ -168,7 +168,7 @@ function pickCard(p, index) {
       'div',
       { class: 'pick-top' },
       h('div', {}, h('div', { class: 'pick-rank' }, `Pick ${index + 1} · ${kindLabel} `, sourceBadge(it.source)), h('h3', { class: 'pick-title', 'data-testid': 'pick-title', text: p.title })),
-      h('div', { class: 'score', title: 'AI goal score (0-100)' }, String(p.score), h('small', { text: 'score' })),
+      h('div', { class: 'score', style: `--s:${Number(p.score) || 0}`, title: 'AI goal score (0-100)' }, String(p.score), h('small', { text: 'score' })),
     ),
     h('p', { class: `pick-goal${p.goal ? '' : ' none'}`, 'data-testid': 'pick-goal', text: p.goal || 'No goal: picked for urgency only' }),
     h('p', { class: 'pick-why', 'data-testid': 'pick-why', text: p.why ? `Why: ${p.why}` : 'Why: highest priority that fits' }),
@@ -275,7 +275,7 @@ function renderInbox() {
       return h(
         'li',
         { class: `mail${e.score < 20 ? ' low' : ''}`, 'data-testid': 'inbox-item', 'data-item-id': e.id },
-        h('div', { class: 'score', title: 'AI goal score (0-100)' }, String(e.score), h('small', { text: 'score' })),
+        h('div', { class: 'score', style: `--s:${Number(e.score) || 0}`, title: 'AI goal score (0-100)' }, String(e.score), h('small', { text: 'score' })),
         h(
           'div',
           {},
