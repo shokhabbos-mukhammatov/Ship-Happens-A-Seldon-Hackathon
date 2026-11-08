@@ -553,25 +553,40 @@ async function rescore({ auto = false } = {}) {
   btn.textContent = 'Rescoring...';
   setupMsg('Asking Claude to score every item against your goals...');
   try {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 12000);
-    const r = await fetch('api/score', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(toScoreRequest(state)),
-      signal: controller.signal,
-    });
-    clearTimeout(t);
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok || !Array.isArray(data.scores)) throw new Error(data.error || `HTTP ${r.status}`);
-    const res = applyScores(state.items, data.scores);
+    // Small batches in parallel: one 36-item call takes ~8 s, a 15-item call ~3 s.
+    const { goals, items } = toScoreRequest(state);
+    const BATCH = 15;
+    const batches = [];
+    for (let i = 0; i < items.length; i += BATCH) batches.push(items.slice(i, i + BATCH));
+    const scoreBatch = async (batch) => {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 25000);
+      try {
+        const r = await fetch('api/score', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ goals, items: batch }),
+          signal: controller.signal,
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !Array.isArray(data.scores)) throw new Error(data.error || `HTTP ${r.status}`);
+        return data.scores;
+      } finally {
+        clearTimeout(t);
+      }
+    };
+    const results = await Promise.allSettled(batches.map(scoreBatch));
+    const scores = results.filter((x) => x.status === 'fulfilled').flatMap((x) => x.value);
+    if (!scores.length) throw new Error('No batch scored');
+    const failed = results.filter((x) => x.status === 'rejected').length;
+    const res = applyScores(state.items, scores);
     state.items = res.items;
     state.scoredBy = 'claude';
     state.tomorrow = null;
     aiOnline = true;
     save();
     render();
-    setupMsg(`Rescored ${res.applied} items with Claude. The code re-ranked them.`);
+    setupMsg(`Rescored ${res.applied} items with Claude${failed ? ` (${failed} of ${batches.length} batches failed; those keep offline scores)` : ''}. The code re-ranked them.`);
     if (!auto) showToast('Rescored with Claude', () => (state = before));
     return true;
   } catch {

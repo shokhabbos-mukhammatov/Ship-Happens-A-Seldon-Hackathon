@@ -379,3 +379,14 @@ test('api/todoist handler: missing token is a 400 without calling Todoist', asyn
   await todoistHandler({ method: 'GET', url: '/api/todoist', headers: {} }, res);
   assert.equal(res.statusCode, 400);
 });
+
+test('cleanClientId tolerates pasted scheme, quotes, spaces and slashes', async () => {
+  const { cleanClientId } = await import('../api/config.js');
+  const id = '714995040650-abc.apps.googleusercontent.com';
+  assert.equal(cleanClientId(`https://${id}`), id);
+  assert.equal(cleanClientId(` "${id}"\n`), id);
+  assert.equal(cleanClientId(`${id}/`), id);
+  assert.equal(cleanClientId(id), id);
+  assert.equal(cleanClientId(''), null);
+  assert.equal(cleanClientId(undefined), null);
+});
