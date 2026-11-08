@@ -171,12 +171,14 @@ try {
       { merge: true },
     );
   });
-  check('Connector hook: loadWorkspace resolves and reports rescore outcome', hook && typeof hook.rescored === 'boolean' && hook.items > 2, JSON.stringify(hook));
+  check('Connector hook: loadWorkspace resolves and reports rescore outcome', hook && typeof hook.rescored === 'boolean' && hook.items === 2, JSON.stringify(hook));
   await page.click(tid('tab-inbox'));
   const gmailBadges = await page.locator(`${tid('inbox-list')} ${tid('source-badge')}`, { hasText: 'Gmail' }).count();
   check('Connector hook: Gmail items show a Gmail source badge', gmailBadges === 1, `${gmailBadges}`);
   const bounced = (await page.locator(tid('door-badge')).textContent()).trim();
-  check('Connector hook: unscored injection email is bounced by the pattern lock', bounced.startsWith('2 bounced'), bounced);
+  check('Connector hook: unscored injection email is bounced by the pattern lock', bounced.startsWith('1 bounced'), bounced);
+  const demoLeft = await page.locator(`${tid('inbox-list')} ${tid('source-badge')}`, { hasText: 'Demo' }).count();
+  check('Connector hook: connecting real data replaces the demo items', demoLeft === 0, `${demoLeft} demo left`);
   await page.click(tid('tab-now'));
   check('Connector hook: next event comes from the connected calendar', /Board sync/.test(await page.locator('#free-line').textContent()));
 

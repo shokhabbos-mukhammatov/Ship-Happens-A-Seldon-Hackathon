@@ -24,7 +24,23 @@ There are no dependencies and no build step. Node 18+ is enough. The app works f
 
 To smoke-test the deployment, run `BASE_URL=https://<your-app>.vercel.app npm run smoke`.
 
-## Wren journeys (paste these into Wren)
+## Seldon QA (Wren)
+
+The test plan lives in [`seldon.yml`](seldon.yml): 7 plain-English cases against the live site, all starting from
+`/?demo=1` so the results don't depend on anyone's real inbox. The last case uses live Claude scoring.
+
+```bash
+npm install -g @seldonqa/cli
+seldon login <your seldon api key>
+seldon validate
+seldon run --wait
+seldon report --md > docs/seldon-report.md
+```
+
+Rerun `seldon run --wait` against the final build after the feature freeze, and commit the report.
+Results also show in app.seldon.com under Experiments → Quality Assurance.
+
+## Wren journeys (plain-English versions of the core cases)
 
 **Journey 1: "What should I do right now?"**
 1. Open the app URL with `?demo=1` at the end, for example `https://<your-app>.vercel.app/?demo=1`.

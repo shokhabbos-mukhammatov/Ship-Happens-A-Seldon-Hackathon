@@ -2,6 +2,7 @@
 // Google Identity Services token client (implicit grant, read-only scopes). The access token lives
 // only in this module's memory: never localStorage, never sent to our server.
 import { parseRecurring, merchantFrom, splitFrom } from './subscriptions.js';
+import { heuristicInjection } from '../engine.js';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
 export const GOOGLE_SCOPES = [
@@ -76,6 +77,9 @@ export function normalizeGmailMessage(msg, { userEmail = '', withRecurring = fal
 
 /** True when a message looks like it needs a human reply (not a list mail, not from me, not a no-reply). */
 export function isReplyCandidate(msg, userEmail = '') {
+  // The Door checks everyone, regulars included: mail that tries to instruct the AI is always
+  // let through to be quarantined, even from yourself, a list or a no-reply sender.
+  if (heuristicInjection(`${header(msg, 'Subject')} ${msg.snippet || ''}`).flagged) return true;
   if (header(msg, 'List-Unsubscribe')) return false;
   const { email } = splitFrom(header(msg, 'From'));
   if (userEmail && email === String(userEmail).toLowerCase()) return false;

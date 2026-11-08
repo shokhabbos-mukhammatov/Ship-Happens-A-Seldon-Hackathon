@@ -196,7 +196,11 @@ test('ingest from a connector marks items unscored with a heuristic score; demo 
   assert.equal(g1.scored_by, 'heuristic');
   assert.notEqual(g1.score, 99, 'incoming scores are ignored');
   assert.equal(g1.goal_index, 0);
-  assert.ok(merged.items.find((i) => i.id === 't1'), 'merge keeps demo items');
+  assert.ok(!merged.items.some((i) => i.source === 'demo'), 'real data replaces demo items');
+  assert.ok(merged.items.find((i) => i.id === 'k1'), 'real sources merge');
+  assert.ok(!(merged.sources || []).includes('demo'), 'demo source dropped');
+  const both = ingest(merged, { source: 'ics', emails: [], tasks: [], events: [] }, { merge: true });
+  assert.ok(both.items.find((i) => i.id === 'g1'), 'a second real source keeps the first');
   assert.ok(E.isQuarantined(merged.items.find((i) => i.id === 'g2')), 'regex lock works before any AI score');
   assert.equal(E.nextEvent(merged.events, NOON).title, 'Board call');
   assert.equal(E.minutesFree(merged.events, NOON, '18:00'), 20);

@@ -174,14 +174,19 @@ export function ingest(state, ws, { merge = false, keepScores = false } = {}) {
       ? { ...it, injection: !!it.injection, injection_quote: it.injection_quote || null, goal_index: it.goal_index ?? null, why: it.why || '', scored_by: 'cache', unscored: false }
       : markUnscored(it, state.goals),
   );
+  // Real data replaces the demo: once a real source connects, demo items and events are dropped
+  // (Reset demo brings them back). Real sources still merge with each other.
+  const dropDemo = n.source !== 'demo';
+  const keep = (x) => !(dropDemo && x.source === 'demo');
   const upsert = (oldList, newList) => {
     if (!merge) return newList;
     const ids = new Set(newList.map((x) => x.id));
-    return [...newList, ...oldList.filter((x) => !ids.has(x.id))];
+    return [...newList, ...oldList.filter((x) => !ids.has(x.id) && keep(x))];
   };
+  const prevSources = (state.sources || []).filter((s) => !(dropDemo && s === 'demo'));
   return {
     ...state,
-    sources: merge ? [...new Set([...(state.sources || []), n.source])] : [n.source],
+    sources: merge ? [...new Set([...prevSources, n.source])] : [n.source],
     items: upsert(state.items || [], incoming),
     events: upsert(state.events || [], n.events),
     picks: null,
