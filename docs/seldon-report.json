@@ -1,0 +1,112 @@
+{
+  "experimentId": "8a0201c9-55a8-4d00-9f4b-03b2f29a75b7",
+  "planTitle": "Seldon QA: shokhabbos-mukhammatov/Ship-Happens-A-Seldon-Hackathon",
+  "status": "complete",
+  "summary": {
+    "total": 7,
+    "passed": 6,
+    "failed": 0,
+    "blocked": 1,
+    "timedOut": 0,
+    "passRate": 0.8571428571428571,
+    "headline": "6/7 passed (86%), 1 blocked."
+  },
+  "failures": [
+    {
+      "id": "skip-undo",
+      "title": "Skip a pick and undo it",
+      "area": "general",
+      "verdict": "blocked",
+      "acceptanceCriterion": "After Skip, the first card shows a different task or email and an \"Undo\" toast is visible. After Undo, the first card shows the original title again and there are still three cards.",
+      "expected": "After clicking Skip, the first card should show a different task or email with an Undo toast visible; after clicking Undo, the original card title should reappear and all three cards should still be present.",
+      "actual": "The trace was truncated and no meaningful interaction steps were recorded for this test case — the agent's observations were elided before any of the test steps could be evaluated.",
+      "recommendation": "The trace budget was exhausted before this test case could be observed — re-run this case in an isolated session so the full interaction sequence is captured and can be evaluated.",
+      "reproductionSteps": [
+        "Open the app at the product URL.",
+        "Click 'What should I do right now?'",
+        "Note the title of the first pick card.",
+        "Click 'Skip' on the first pick card.",
+        "Observe whether the card changes and an Undo toast appears.",
+        "Click 'Undo' in the toast and verify the original card returns with all three cards still present."
+      ],
+      "unmetPreconditions": [],
+      "evidence": [],
+      "hint": "Blocked before the case could be evaluated. Expected: After clicking Skip, the first card should show a different task or email with an Undo toast visible; after clicking Undo, the original card title should reappear and all three cards should still be present. Observed: The trace was truncated and no meaningful interaction steps were recorded for this test case — the agent's observations were elided before any of the test steps could be evaluated.",
+      "screenshotUrls": [],
+      "recordingUrl": "https://storage.googleapis.com/experiment-persona-output/experiment_reports/experiment_id%3D8a0201c9-55a8-4d00-9f4b-03b2f29a75b7/persona_id%3D8a0201c9-55a8-4d00-9f4b-03b2f29a75b7/gifs/run_1_step_1.gif?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=blok-backend%40blok-auth-458418.iam.gserviceaccount.com%2F20261108%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261108T020523Z&X-Goog-Expires=604799&X-Goog-SignedHeaders=host&X-Goog-Signature=18d537e7026206a3d69fa5a6f681121589615a33e434d89ce30d65dd650ef1163124e45818f09591736ece4d850e68178b01168e256345cfd60fcfc8a65173134d1fa77e3fcbb3c6b8dffbd9b5d8ed28f8eab3ce0495b1e8b776527892bbb358ba76bd8e3a7ad678875a966373bf7816bf57bd2331b93ad5f83016701fbfa59660b633a6241cde39ca8cd593a5ced97d9aebe25c7e4fd6e3b1899768937a5acb9786e3fff99ab7d4df059e124ae2d89a12a948bdd2bb5d154b236793670dad324e95c60635582016f61aec92b3eb7009ae5d44eff8d0a2a893ecc03bf015a52b2b1f054dcaa87b57d0ed49e13200d57ebcc0ff5c6b51f439975c678f3bec37d9",
+      "attempts": 1,
+      "passes": 0,
+      "flaky": false,
+      "durationSeconds": 1895.159,
+      "startedAt": "2026-11-08T01:27:11.892837+00:00",
+      "completedAt": "2026-11-08T01:58:47.051463+00:00"
+    }
+  ],
+  "passed": [
+    {
+      "id": "stop-time-banner",
+      "title": "Last call at the end of the day",
+      "area": "general",
+      "durationSeconds": 164.884,
+      "startedAt": "2026-11-08T01:27:10.204466+00:00",
+      "completedAt": "2026-11-08T01:29:55.08858+00:00"
+    },
+    {
+      "id": "what-now",
+      "title": "Get the three things to do right now",
+      "area": "general",
+      "durationSeconds": 41.851,
+      "startedAt": "2026-11-08T01:27:19.063989+00:00",
+      "completedAt": "2026-11-08T01:28:00.91449+00:00"
+    },
+    {
+      "id": "rescore-claude",
+      "title": "New goals get rescored live by Claude",
+      "area": "general",
+      "durationSeconds": 118.52,
+      "startedAt": "2026-11-08T01:27:15.599635+00:00",
+      "completedAt": "2026-11-08T01:29:14.119952+00:00"
+    },
+    {
+      "id": "door-quarantine",
+      "title": "The Door bounces a prompt-injection email",
+      "area": "general",
+      "durationSeconds": 39.495,
+      "startedAt": "2026-11-08T01:27:10.041637+00:00",
+      "completedAt": "2026-11-08T01:27:49.53643+00:00"
+    },
+    {
+      "id": "last-call-cancel",
+      "title": "Last Call finds subscriptions and drafts a cancellation without sending it",
+      "area": "general",
+      "durationSeconds": 91.411,
+      "startedAt": "2026-11-08T01:27:13.277021+00:00",
+      "completedAt": "2026-11-08T01:28:44.687885+00:00"
+    },
+    {
+      "id": "drop-undo",
+      "title": "Drop a stale task and undo it",
+      "area": "general",
+      "durationSeconds": 1242.605,
+      "startedAt": "2026-11-08T01:27:17.094587+00:00",
+      "completedAt": "2026-11-08T01:47:59.69983+00:00"
+    }
+  ],
+  "coverage": {
+    "journeysExercised": [
+      "Last call at the end of the day",
+      "Get the three things to do right now",
+      "New goals get rescored live by Claude",
+      "The Door bounces a prompt-injection email",
+      "Last Call finds subscriptions and drafts a cancellation without sending it",
+      "Drop a stale task and undo it"
+    ],
+    "unreachable": [
+      "Skip a pick and undo it: The trace budget was exhausted before this test case could be observed — re-run this case in an isolated session so the full interaction sequence is captured and can be evaluated."
+    ],
+    "confidenceNote": "6/7 cases passed. 1 blocked.",
+    "flakyCaseIds": []
+  },
+  "narrative": "6 of 7 test cases passed. The core journeys — getting today's top three picks, rescoring goals with Claude, the Door's prompt-injection quarantine, the Last Call subscription drafter, the end-of-day banner, and the drop-and-undo flow — all behaved exactly as specified. The one gap is the Skip-and-Undo case, which could not be evaluated at all: the test session ran out of steps before any interaction with that feature was recorded. This means there is currently no evidence that skipping a pick card works correctly or that the undo recovers it. Everything else is shipping-ready; only the skip flow needs a dedicated re-run to close the gap.",
+  "openQuestions": []
+}
