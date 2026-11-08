@@ -4,7 +4,7 @@
 
 const MODEL = 'claude-haiku-5-5';
 const API_URL = 'https://api.anthropic.com/v1/messages';
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 20000; // the client sends batches of ~15 items (~3 s each)
 const MAX_ITEMS = 80;
 
 const SYSTEM_PROMPT = `You are the scoring module of Bouncer, a goal-first assistant.
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
     const scores = parseScores(text, input.items.map((it) => it.id), input.goals.length);
     return send(res, 200, { scores, model: MODEL });
   } catch (err) {
-    const msg = err?.name === 'AbortError' ? 'AI timed out after 8s' : String(err?.message || err);
+    const msg = err?.name === 'AbortError' ? `AI timed out after ${TIMEOUT_MS / 1000}s` : String(err?.message || err);
     return send(res, 503, { error: msg });
   } finally {
     clearTimeout(timer);
