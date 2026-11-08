@@ -72,7 +72,7 @@ Throughout this guide, `https://<app>.vercel.app` stands for your **production**
       Use no trailing slash and no path.
    4. Leave **Authorized redirect URIs** empty. The token popup doesn't need one.
    5. Click **Create**, then copy the **Client ID**. It ends in `.apps.googleusercontent.com`.
-7. **Set `GOOGLE_CLIENT_ID`** in `.env` and in your Vercel environment variables, then restart or redeploy.
+7. **Set `GOOGLE_CLIENT_ID`** in `.env` and in your Vercel environment variables, then restart or redeploy. Paste the **bare ID** (`1234-abc.apps.googleusercontent.com`), not a URL. Vercel only applies env var changes on the next deployment.
 
 **What signing in looks like:**
 
@@ -86,6 +86,7 @@ Throughout this guide, `https://<app>.vercel.app` stands for your **production**
 |---|---|
 | `origin_mismatch` or "not a valid origin" | Add the exact origin from your address bar under Authorized JavaScript origins. New origins can take up to 5 minutes to start working. |
 | `access_denied` | The account isn't a test user. Add it under Audience, then Test users. |
+| `invalid_client` / "The OAuth client was not found" | The client ID the site sends doesn't exist. Open `/api/config` on your site and compare it with the ID in Google Cloud. A pasted `https://` prefix caused this during our build (the app now strips it). Fix the env var, then **redeploy**. |
 | "The popup was blocked" | Allow popups for the site in the address bar, then click Connect again. |
 | "Sign-in expired" | Tokens last about 1 hour. Click Connect again. |
 
