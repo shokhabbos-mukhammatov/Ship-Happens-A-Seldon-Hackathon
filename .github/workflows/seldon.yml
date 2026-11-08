@@ -1,0 +1,113 @@
+# Runs the Seldon QA suite in seldon.yml and commits docs/seldon-report.md back to the branch.
+#
+# Why CI: the Seldon CLI ships native binaries for macOS and Linux only (there is no
+# @seldonqa/cli-win32-x64), so Windows laptops can't run it locally.
+#
+# Needs one repository secret: SELDON_API_KEY (Settings > Secrets and variables > Actions).
+# Start it with "Run workflow" in the Actions tab, or by pushing to a seldon/** branch.
+name: Seldon QA
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Target URL (leave blank to use run.url from seldon.yml)
+        required: false
+        default: ''
+  push:
+    branches: ['seldon/**']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seldon-qa
+  cancel-in-progress: false
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NO_UPDATE_NOTIFIER: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Seldon CLI
+        run: |
+          npm install -g @seldonqa/cli
+          seldon --version
+
+      - name: Log in
+        env:
+          SELDON_API_KEY: ${{ secrets.SELDON_API_KEY }}
+        run: |
+          if [ -z "$SELDON_API_KEY" ]; then
+            echo "::error::Missing SELDON_API_KEY secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          seldon login "$SELDON_API_KEY" > /dev/null
+
+      - name: Validate, run and report
+        id: seldon
+        env:
+          TARGET_URL: ${{ inputs.url }}
+        run: |
+          out=docs/seldon-report.md
+          url_flag=()
+          if [ -n "$TARGET_URL" ]; then url_flag=(--url "$TARGET_URL"); fi
+
+          # Without a report, still commit what happened so it can be read from the branch.
+          no_report() {
+            {
+              echo "# Seldon QA: $1"
+              echo
+              echo "Commit \`${GITHUB_SHA::7}\`, $(date -u '+%Y-%m-%d %H:%M UTC'). Seldon produced no report."
+              echo
+              echo '```'
+              cat "$2"
+              echo '```'
+            } > "$out"
+          }
+
+          seldon validate 2>&1 | tee validate.log
+          if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+            no_report "seldon validate failed" validate.log
+            echo "rc=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          seldon run --wait "${url_flag[@]}" 2>&1 | tee run.log
+          run_rc=${PIPESTATUS[0]}
+          echo "rc=$run_rc" >> "$GITHUB_OUTPUT"
+
+          # --full expands every failing case; fall back to plain --md if the flag is refused.
+          if seldon report --md --full > report.md 2> report.err && [ -s report.md ]; then
+            mv report.md "$out"
+          elif seldon report --md > report.md 2>> report.err && [ -s report.md ]; then
+            mv report.md "$out"
+          else
+            cat run.log report.err > combined.log
+            no_report "no report (seldon run exited $run_rc)" combined.log
+          fi
+
+      - name: Commit report
+        if: always() && hashFiles('docs/seldon-report.md') != ''
+        run: |
+          cat docs/seldon-report.md >> "$GITHUB_STEP_SUMMARY"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/seldon-report.md
+          if git diff --cached --quiet; then echo "Report unchanged"; exit 0; fi
+          git commit -m "Seldon QA report for ${GITHUB_SHA::7}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Fail if Seldon did not finish cleanly
+        if: steps.seldon.outputs.rc != '0'
+        run: |
+          echo "::error::Seldon exited ${{ steps.seldon.outputs.rc }}. See docs/seldon-report.md."
+          exit 1
