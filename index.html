@@ -372,7 +372,7 @@
         const door = $('#door-badge'); const n = door ? parseInt(door.textContent, 10) || 0 : 0;
         set('kpi-bounced', String(n)); set('nc-door', n ? String(n) : '');
         const tot = $('#subs-total'); const m = tot && tot.textContent.match(/\$[\d,.]+/); set('kpi-save', m ? m[0] : '–');
-        set('nc-last', String(document.querySelectorAll('#subs-list > li').length || ''));
+        set('nc-last', String(document.querySelectorAll('#subs-list > li:not(.empty)').length || ''));
         set('nc-now', String(document.querySelectorAll('#picks [data-testid="pick-card"]').length || ''));
         const sel = document.querySelector('[role="tab"][aria-selected="true"]'); if (sel) set('crumb', names[sel.dataset.tab] || 'Workspace');
       };

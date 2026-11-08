@@ -1,6 +1,6 @@
 // Bouncer UI. All ranking/deciding lives in src/engine.js; this file only renders and records clicks.
 import * as E from './src/engine.js';
-import { buildDemoWorkspace, toScoreRequest, applyScores, ingest, setWorkspaceHost, loadWorkspace, STATE_VERSION } from './src/workspace.js';
+import { buildDemoWorkspace, emptyState, toScoreRequest, applyScores, ingest, setWorkspaceHost, loadWorkspace, STATE_VERSION } from './src/workspace.js';
 
 const STORE_KEY = 'bouncer.state';
 const $ = (sel) => document.querySelector(sel);
@@ -702,7 +702,15 @@ async function init() {
   wire();
   const params = new URLSearchParams(location.search);
   const forceDemo = params.get('demo') === '1';
+  // ?app=1 ("Use my own data"): never show the demo. Start empty on Setup until a real source connects.
+  const ownData = params.get('app') === '1';
   state = forceDemo ? null : loadSaved();
+  let startOnSetup = false;
+  if (ownData && (!state || (state.sources || []).every((src) => src === 'demo'))) {
+    state = emptyState(now());
+    startOnSetup = true;
+    save();
+  }
   if (!state) {
     try {
       state = await freshDemo();
@@ -713,6 +721,10 @@ async function init() {
     save();
   }
   render();
+  if (startOnSetup) {
+    setTab('setup');
+    setupMsg('Step 1: write your goals above and press Save. Step 2: connect Gmail + Google Calendar below. Then go to Now.');
+  }
   setWorkspaceHost({ load: hostLoad });
   window.bouncer = Object.freeze({ loadWorkspace });
   document.body.dataset.ready = 'true';
