@@ -1,0 +1,143 @@
+# Runs the Seldon QA suite in seldon.yml and commits docs/seldon-report.md (plus the full
+# docs/seldon-report.json) back to the branch.
+#
+# Why CI: the Seldon CLI ships native binaries for macOS and Linux only (there is no
+# @seldonqa/cli-win32-x64), so Windows laptops can't run it locally.
+#
+# Needs one repository secret: SELDON_API_KEY (Settings > Secrets and variables > Actions).
+# Manual only (Actions tab > Seldon QA > Run workflow), because every run spends Seldon usage.
+# Pick the branch to commit the report to; set report_id to re-fetch an earlier run's
+# report without starting a new one.
+name: Seldon QA
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Target URL (leave blank to use run.url from seldon.yml)
+        required: false
+        default: ''
+      report_id:
+        description: Re-fetch this Seldon run's report instead of starting a new run
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seldon-qa
+  cancel-in-progress: false
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NO_UPDATE_NOTIFIER: '1'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Seldon CLI
+        run: |
+          npm install -g @seldonqa/cli
+          seldon --version
+
+      - name: Log in
+        env:
+          SELDON_API_KEY: ${{ secrets.SELDON_API_KEY }}
+        run: |
+          if [ -z "$SELDON_API_KEY" ]; then
+            echo "::error::Missing SELDON_API_KEY secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          seldon login "$SELDON_API_KEY" > /dev/null
+
+      - name: Validate, run and report
+        id: seldon
+        env:
+          TARGET_URL: ${{ inputs.url }}
+          REPORT_ID: ${{ inputs.report_id }}
+        run: |
+          out=docs/seldon-report.md
+          url_flag=()
+          if [ -n "$TARGET_URL" ]; then url_flag=(--url "$TARGET_URL"); fi
+
+          # Report-only mode: re-fetch an earlier run's report instead of starting a new run.
+          id=$(printf '%s' "$REPORT_ID" | tr -cd '0-9A-Za-z_-')
+
+          # Without a report, still commit what happened so it can be read from the branch.
+          no_report() {
+            {
+              echo "# Seldon QA: $1"
+              echo
+              echo "Commit \`${GITHUB_SHA::7}\`, $(date -u '+%Y-%m-%d %H:%M UTC'). Seldon produced no report."
+              echo
+              echo '```'
+              cat "$2"
+              echo '```'
+            } > "$out"
+          }
+
+          if [ -n "$id" ]; then
+            echo "Report-only: fetching run $id (no new Seldon run)"
+            run_rc=0
+            : > run.log
+          else
+            seldon validate 2>&1 | tee validate.log
+            if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+              no_report "seldon validate failed" validate.log
+              echo "rc=1" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            seldon run --wait "${url_flag[@]}" 2>&1 | tee run.log
+            run_rc=${PIPESTATUS[0]}
+            id=$(sed -n 's/^Run started — *//p' run.log | head -n1 | tr -cd '0-9A-Za-z_-')
+          fi
+          echo "rc=$run_rc" >> "$GITHUB_OUTPUT"
+          id_flag=()
+          if [ -n "$id" ]; then id_flag=(--id "$id"); fi
+
+          # --full expands every failing case; fall back to plain --md if the flag is refused.
+          if seldon report "${id_flag[@]}" --md --full > report.md 2> report.err && [ -s report.md ]; then
+            mv report.md "$out"
+          elif seldon report "${id_flag[@]}" --md > report.md 2>> report.err && [ -s report.md ]; then
+            mv report.md "$out"
+          else
+            cat run.log report.err > combined.log
+            no_report "no report (seldon run exited $run_rc)" combined.log
+          fi
+
+          # The JSON has every case, including any the Markdown view leaves out.
+          if seldon report "${id_flag[@]}" --json > report.json 2>> report.err && [ -s report.json ]; then
+            mv report.json docs/seldon-report.json
+            cat docs/seldon-report.json
+          fi
+          cat report.err >&2 || true
+
+          # Agent logs, for debugging only (job log, not committed).
+          echo "::group::seldon logs"
+          timeout 120 seldon logs "${id_flag[@]}" 2>&1 | tail -c 200000 || true
+          echo "::endgroup::"
+
+      - name: Commit report
+        if: always() && hashFiles('docs/seldon-report.md') != ''
+        run: |
+          cat docs/seldon-report.md >> "$GITHUB_STEP_SUMMARY"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/seldon-report.md docs/seldon-report.json 2>/dev/null || git add docs/seldon-report.md
+          if git diff --cached --quiet; then echo "Report unchanged"; exit 0; fi
+          git commit -m "Seldon QA report for ${GITHUB_SHA::7}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Fail if Seldon did not finish cleanly
+        if: steps.seldon.outputs.rc != '0'
+        run: |
+          echo "::error::Seldon exited ${{ steps.seldon.outputs.rc }}. See docs/seldon-report.md."
+          exit 1
