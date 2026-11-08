@@ -77,7 +77,7 @@ Full detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | ICS calendar link / file | ✅ Verified with a real public calendar feed and file upload |
 | Todoist | ⚠️ Built. Rejection of a bad token verified; a valid token not yet tested |
 | Outlook / Microsoft 365 | ⚠️ Built (MSAL popup verified to reach Microsoft). Not configured on the live site yet |
-| End-to-end browser checks | ✅ 36/36 locally; 35/35 against the live URL before the latest merge (Playwright) |
+| End-to-end browser checks | ✅ 36/36 passing against the live URL (Playwright, after the PR #4 deploy) |
 | Seldon QA (Wren) | 📋 Plan committed in [`seldon.yml`](seldon.yml). Results: see [docs/TESTING.md](docs/TESTING.md#seldon-qa-results) |
 | Google app verification | ⏳ Test mode: only Google accounts on the test-user list can sign in. Everyone else uses demo mode or an ICS link |
 

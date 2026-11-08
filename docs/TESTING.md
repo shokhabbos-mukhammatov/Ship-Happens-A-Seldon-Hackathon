@@ -71,7 +71,7 @@ BASE_URL=https://ship-happens-a-seldon-hackathon.vercel.app npm run smoke   # sa
 - **No page errors** in the console.
 - **Mobile 375 px:** no horizontal scroll on any tab.
 
-**Latest results:** 36/36 locally on the current branch, and 35/35 against production before the last merge (the 36th check, "connecting real data replaces the demo items", was added in that change). Rerun with `BASE_URL=… npm run smoke` after each deploy.
+**Latest result against production:** 36/36 passed after the PR #4 deploy, including live Claude rescoring ("Rescored 36 items with Claude") and "connecting real data replaces the demo items". Rerun with `BASE_URL=… npm run smoke` after each deploy.
 
 ## 3. Seldon QA (Wren)
 
